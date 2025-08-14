@@ -4,6 +4,7 @@ import DocxerPlugin from "./main"
 export interface DocxerPluginSettings {
   deleteFileAfterConversion: boolean
   importComments: boolean
+  ignoreAttachments: boolean
   fallbackAttachmentName: string
   attachmentsFolder: "vault" | "custom" | "same" | "subfolder"
   customAttachmentsFolder: string
@@ -13,6 +14,7 @@ export interface DocxerPluginSettings {
 export const DEFAULT_SETTINGS: Partial<DocxerPluginSettings> = {
   deleteFileAfterConversion: false,
   importComments: false,
+  ignoreAttachments: false,
   fallbackAttachmentName: "Attachment",
   attachmentsFolder: "subfolder",
   customAttachmentsFolder: "Attachments",
@@ -83,6 +85,15 @@ export class DocxerPluginSettingTab extends PluginSettingTab {
         toggle
           .setValue(this.settingsManager.getSetting('importComments'))
           .onChange(async (value) => await this.settingsManager.setSetting({ importComments: value }))
+      )
+
+    new Setting(containerEl)
+      .setName("Ignore attachments")
+      .setDesc("Skip extracting attachments (images) from the source file. Images will not be created and no attachment directories will be created.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.settingsManager.getSetting('ignoreAttachments'))
+          .onChange(async (value) => await this.settingsManager.setSetting({ ignoreAttachments: value }))
       )
 
     new Setting(containerEl)

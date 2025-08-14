@@ -47,9 +47,15 @@ export default class DocxFileView extends ConvertibleFileView {
 
     // Convert DOCX to HTML
     const fileBuffer = await this.app.vault.readBinary(this.file)
-    const html = await mammoth.convertToHtml({ arrayBuffer: fileBuffer }, {
+    const ignoreAttachments = this.plugin.settings.getSetting("ignoreAttachments")
+    
+    const conversionOptions: any = {
       styleMap: this.plugin.settings.getSetting("importComments") ? ["comment-reference => sup"] : undefined,
-      convertImage: mammoth.images.imgElement(async (image: any) => {
+    }
+    
+    // Only add image conversion if attachments are not ignored
+    if (!ignoreAttachments) {
+      conversionOptions.convertImage = mammoth.images.imgElement(async (image: any) => {
         console.debug(`Extracting image ${image.altText ?? ""}`)
         const imageBinary = await image.read()
 
@@ -64,7 +70,9 @@ export default class DocxFileView extends ConvertibleFileView {
 
         return { src: path.contains(" ") ? `<${path}>` : path, alt: attachmentFilename }
       })
-    })
+    }
+    
+    const html = await mammoth.convertToHtml({ arrayBuffer: fileBuffer }, conversionOptions)
 
     // Convert HTML to Markdown
     let markdown
