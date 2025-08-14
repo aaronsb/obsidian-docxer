@@ -4,6 +4,7 @@ import DocxerPlugin from "./main"
 export interface DocxerPluginSettings {
   deleteFileAfterConversion: boolean
   importComments: boolean
+  embedImageData: boolean
   ignoreAttachments: boolean
   fallbackAttachmentName: string
   attachmentsFolder: "vault" | "custom" | "same" | "subfolder"
@@ -14,6 +15,7 @@ export interface DocxerPluginSettings {
 export const DEFAULT_SETTINGS: Partial<DocxerPluginSettings> = {
   deleteFileAfterConversion: false,
   importComments: false,
+  embedImageData: false,
   ignoreAttachments: false,
   fallbackAttachmentName: "Attachment",
   attachmentsFolder: "subfolder",
@@ -88,8 +90,17 @@ export class DocxerPluginSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
+      .setName("Embed image data in document")
+      .setDesc("Instead of extracting images to files, embed them as base64 data directly in the markdown. Creates self-contained documents but with larger file sizes.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.settingsManager.getSetting('embedImageData'))
+          .onChange(async (value) => await this.settingsManager.setSetting({ embedImageData: value }))
+      )
+
+    new Setting(containerEl)
       .setName("Ignore attachments")
-      .setDesc("Skip extracting attachments (images) from the source file. Images will not be created and no attachment directories will be created.")
+      .setDesc("Completely ignore images from the source file. Only the image filename or description will be shown as plain text.")
       .addToggle((toggle) =>
         toggle
           .setValue(this.settingsManager.getSetting('ignoreAttachments'))
