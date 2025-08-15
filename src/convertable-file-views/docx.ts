@@ -54,9 +54,27 @@ export default class DocxFileView extends ConvertibleFileView {
       styleMap: this.plugin.settings.getSetting("importComments") ? ["comment-reference => sup"] : undefined,
     }
     
-    // Handle image conversion based on settings
+    /**
+     * IMAGE CONVERSION STATE MACHINE
+     * Based on settings, handle images in one of three ways:
+     * 
+     * 1. IGNORE state (ignoreAttachments=true)
+     *    - Skip all image processing
+     *    - Return placeholder text only
+     *    - No files or data created
+     * 
+     * 2. EMBED state (embedImageData=true, ignoreAttachments=false)
+     *    - Convert images to base64 data URLs
+     *    - Embed directly in markdown
+     *    - No external files created
+     * 
+     * 3. DEFAULT state (both false)
+     *    - Extract images to separate files
+     *    - Create attachment folders as configured
+     *    - Standard Obsidian behavior
+     */
     if (ignoreAttachments) {
-      // Completely ignore images - just show filename/description
+      // IGNORE state: Completely skip images
       conversionOptions.convertImage = mammoth.images.imgElement(async (image: any) => {
         const altText = image.altText || "image"
         console.debug(`Ignoring image: ${altText}`)
@@ -64,10 +82,10 @@ export default class DocxFileView extends ConvertibleFileView {
         return { src: "", alt: `[Image: ${altText}]` }
       })
     } else if (embedImageData) {
-      // Embed images as base64 data URLs
+      // EMBED state: Convert to base64 data URLs
       conversionOptions.convertImage = mammoth.images.dataUri
     } else {
-      // Default behavior - extract to files
+      // DEFAULT state: Extract to files
       conversionOptions.convertImage = mammoth.images.imgElement(async (image: any) => {
         console.debug(`Extracting image ${image.altText ?? ""}`)
         const imageBinary = await image.read()
